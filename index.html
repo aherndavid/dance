@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="version" content="1.22">
+<meta name="version" content="1.23">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -204,7 +204,7 @@
   #btn-heartdance { background: #1976d2; border-color: #64b5f6; }
   /* EMAIL under the radio buttons; CLOSE on its own further down.
      Both full width, so the same length. */
-  #btn-email, #btn-close {
+  #btn-close {
     display: block; width: 100%; color: #fff;
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.08em;
     padding: 8px 12px;
@@ -250,7 +250,7 @@
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.06em;
     padding: 8px 12px;
   }
-  .pair-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .pair-row { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
   .pair-row button { margin-top: 0 !important; min-width: 0; }
   #btn-camera {
     display: block; width: 100%; margin-top: 8px; padding: 8px 12px;
@@ -271,8 +271,7 @@
     background: #ef6c00; color: #fff; border-color: #ffa726;
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.06em;
   }
-  #btn-email { background: #1565c0; border-color: #64b5f6; margin-top: 8px; }
-  .pair-row #btn-camera, .pair-row #btn-email { height: clamp(84px, 22.8vw, 110px); }   /* CAMERA / EMAIL: double height */
+  .pair-row #btn-camera { height: clamp(84px, 22.8vw, 110px); }   /* CAMERA: double height, full width */
   /* RATE THIS APP: thin, black, bold white text */
   #btn-rate {
     display: block; width: 100%; padding: 8px 12px;
@@ -379,7 +378,6 @@
     <div class="panel" id="panel-more" hidden>
       <div class="pair-row">
         <button id="btn-camera" onclick="openCamera()">CAMERA</button>
-        <button id="btn-email" onclick="openEmail()">EMAIL</button>
       </div>
       <button id="btn-recipes" onclick="openRecipes()">STUDENT RECIPES</button>
       <button id="btn-rate" class="wide-btn" onclick="toggleStars()">RATE APP</button>
@@ -399,7 +397,7 @@
         <p>Your thumbs are remembered on this phone only.</p>
         <h2>Buttons</h2>
         <p><b>RADIO</b> — live dance stations. Tap a station to listen; tap <b>BACK TO MUSIC</b> to return to your songs.</p>
-        <p><b>MORE</b> — camera, email, student recipes, rate the app and this help. Tap <b>BACK TO MUSIC</b> to get the music buttons back.</p>
+        <p><b>MORE</b> — camera, student recipes, rate the app and this help. Tap <b>BACK TO MUSIC</b> to get the music buttons back.</p>
         <button id="btn-feedback" class="wide-btn" onclick="sendFeedback()">SEND FEEDBACK</button>
         <p class="howto-version" id="howto-version"></p>
       </div>
@@ -1122,10 +1120,6 @@ async function savePhoto() {
 }
 function closePhoto() { document.getElementById('photo-layer').hidden = true; }
 
-// EMAIL button: opens the phone's own email app with a new message
-function openEmail() {
-  location.href = 'mailto:' + HELP_EMAIL + '?subject=' + encodeURIComponent('From Dance');
-}
 let helpSending = false;
 let helpLocation = null;   // Promise of { link, accuracy } or { error }
 
