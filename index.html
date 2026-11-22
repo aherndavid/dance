@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="version" content="1.20">
+<meta name="version" content="1.21">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -202,8 +202,6 @@
   }
   #btn-capdance   { background: #0d47a1; border-color: #5c8fe0; }
   #btn-heartdance { background: #1976d2; border-color: #64b5f6; }
-  #btn-house      { background: #455a64; border-color: #78909c; }
-  #btn-garage     { background: #607d8b; border-color: #90a4ae; }
   /* EMAIL under the radio buttons; CLOSE on its own further down.
      Both full width, so the same length. */
   #btn-email, #btn-close {
@@ -252,7 +250,6 @@
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.06em;
     padding: 8px 12px;
   }
-  #btn-close.wide-btn { margin-top: 36px; }
   .pair-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
   .pair-row button { margin-top: 0 !important; min-width: 0; }
   #btn-camera {
@@ -287,7 +284,7 @@
     flex: 1 1 0; min-width: 0; padding: 6px 0; background: #000; color: #ffd400;
     border: 2px solid #555; border-radius: 12px; font-size: clamp(24px, 7vw, 36px); line-height: 1;
   }
-  #btn-close { background: #c62828; border-color: #ef5350; }
+  #btn-close { margin: 0 auto; background: #c62828; border-color: #ef5350; color: #fff; -webkit-text-stroke: 0; font-size: clamp(20px, 5vw, 30px); letter-spacing: 0.08em; width: 100%; }
   .help {
     position: fixed; inset: 0; z-index: 90;
     background: #111;
@@ -375,8 +372,6 @@
       <div class="radio-row">
         <button class="btn-radio" id="btn-capdance" onclick="toggleRadio('capdance')">CAPITAL DANCE</button>
         <button class="btn-radio" id="btn-heartdance" onclick="toggleRadio('heartdance')">HEART DANCE</button>
-        <button class="btn-radio" id="btn-house" onclick="toggleRadio('house')">HOUSE</button>
-        <button class="btn-radio" id="btn-garage" onclick="toggleRadio('garage')">UK GARAGE</button>
       </div>
     </div>
 
@@ -410,14 +405,14 @@
     </div>
     <input type="file" id="camera-input" accept="image/*" capture="environment" hidden onchange="gotPhoto(this)">
 
-    <!-- CLOSE: on its own, further down, full width -->
-    <button id="btn-close" class="wide-btn" onclick="location.href='https://www.google.com'">CLOSE</button>
 
     <div class="msg" id="msg"></div>
   </div>
 
   <div class="back-bar" id="back-bar">
     <button id="btn-controls" onclick="showPlayer()" hidden>BACK TO CONTROLS</button>
+    <!-- CLOSE: pinned to the bottom so it never moves (player screen only) -->
+    <button id="btn-close" onclick="location.href='https://www.google.com'" hidden>CLOSE</button>
     <div class="version" id="version"></div>
   </div>
 
@@ -824,11 +819,18 @@ function openAlbum(i, autoplay = true) {
   loadTrack(0, autoplay);
 }
 
+// CLOSE shows on the player screen, except while HOW TO USE is open
+function updateClose() {
+  document.getElementById('btn-close').hidden =
+    document.getElementById('player').hidden || !document.getElementById('panel-howto').hidden;
+  fitBackBar();
+}
+
 function showPicker() {
   document.getElementById('player').hidden = true;
   document.getElementById('picker').hidden = false;
   document.getElementById('btn-controls').hidden = !album;   // only once something is loaded
-  fitBackBar();
+  updateClose();
   window.scrollTo(0, 0);
 }
 
@@ -836,7 +838,7 @@ function showPlayer() {
   document.getElementById('picker').hidden = true;
   document.getElementById('player').hidden = false;
   document.getElementById('btn-controls').hidden = true;
-  fitBackBar();
+  updateClose();
   window.scrollTo(0, 0);
 }
 
@@ -927,9 +929,7 @@ function updateMediaSession(artSrc) {
 // a skip button) goes back to the songs.
 const STATIONS = {
   capdance:   { name: 'Capital Dance',    label: 'CAPITAL DANCE', url: 'https://media-ssl.musicradio.com/CapitalDanceMP3', art: 'assets/capdance.svg' },
-  heartdance: { name: 'Heart Dance',      label: 'HEART DANCE',   url: 'https://media-ssl.musicradio.com/HeartDanceMP3',   art: 'assets/heartdance.svg' },
-  house:      { name: 'House Party',      label: 'HOUSE',         url: 'https://listen.reyfm.de/houseparty_192kbps.mp3',  art: 'assets/house.svg' },
-  garage:     { name: 'UK Garage',        label: 'UK GARAGE',     url: 'https://ukg.algorythmeradio.com/stream',           art: 'assets/garage.svg' }
+  heartdance: { name: 'Heart Dance',      label: 'HEART DANCE',   url: 'https://media-ssl.musicradio.com/HeartDanceMP3',   art: 'assets/heartdance.svg' }
 };
 let radio = null;                              // key of the station playing, or null for music
 
@@ -1057,11 +1057,13 @@ function toggleMore() {
   document.getElementById('btn-menu-more').textContent = open ? 'BACK TO MUSIC' : 'MORE';
   if (open) setOpen('btn-menu-radio', 'panel-radio', false);
   else { document.getElementById('stars').hidden = true; setOpen('btn-menu-howto', 'panel-howto', false); }
+  updateClose();
   window.scrollTo(0, 0);
 }
 function toggleHowto() {
   const open = document.getElementById('panel-howto').hidden;
   setOpen('btn-menu-howto', 'panel-howto', open);
+  updateClose();
   if (open) document.getElementById('panel-howto').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
