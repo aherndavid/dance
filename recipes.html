@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dance">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<title>Student Recipes</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #111; min-height: 100%; }
+  body {
+    min-height: 100vh; min-height: 100dvh;
+    background: #111; color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(18px, 4.6vw, 24px); line-height: 1.4;
+    padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+             calc(24px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { width: 100%; max-width: 820px; margin: 0 auto; }
+  button {
+    font-family: inherit; font-weight: 900; color: #fff;
+    border: 3px solid #78909c; border-radius: 18px; background: #455a64;
+    cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
+  }
+  button:active { filter: brightness(0.8); }
+  button:focus-visible { outline: 6px solid #fff; outline-offset: 4px; }
+
+  h1 { font-size: clamp(26px, 7vw, 40px); text-align: center; margin: 4px 0 4px; }
+  .sub { text-align: center; color: #aaa; font-size: clamp(15px, 3.8vw, 20px); margin-bottom: 16px; }
+
+  /* Previous / count / Next */
+  .nav { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .nav button { height: clamp(56px, 14vw, 72px); font-size: clamp(18px, 4.6vw, 26px); }
+  #btn-prev, #btn-next { background: #1565c0; border-color: #64b5f6; }
+  .count { color: #ccc; font-size: clamp(16px, 4vw, 22px); white-space: nowrap; text-align: center; }
+
+  .card { background: #1c2329; border: 2px solid #37474f; border-radius: 18px; padding: 18px 16px; }
+  .card h2 { font-size: clamp(24px, 6.4vw, 36px); line-height: 1.15; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+  .facts span {
+    background: #263238; border: 1px solid #455a64; border-radius: 999px;
+    padding: 4px 12px; font-size: clamp(14px, 3.6vw, 18px); color: #cfd8dc;
+  }
+  .facts .cost { background: #0d47a1; border-color: #64b5f6; color: #fff; font-weight: bold; }
+  .card h3 { font-size: clamp(18px, 4.8vw, 26px); color: #64b5f6; margin: 18px 0 8px; }
+
+  /* Shopping list: tap an item to tick it off */
+  .shop { list-style: none; display: grid; gap: 6px; }
+  .shop li {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 8px 12px; border-radius: 12px; background: #263238; cursor: pointer;
+  }
+  .shop li .price { color: #90caf9; white-space: nowrap; font-size: 0.9em; }
+  .shop li.got { opacity: 0.45; text-decoration: line-through; }
+  .shop li.got::before { content: '✓ '; color: #64b5f6; }
+  .have { color: #aaa; font-size: clamp(14px, 3.6vw, 18px); margin-top: 8px; }
+
+  .steps { padding-left: 1.4em; display: grid; gap: 8px; }
+  .tip { margin-top: 14px; color: #cfd8dc; font-size: clamp(15px, 3.8vw, 20px); }
+  .tip b { color: #64b5f6; }
+
+  #btn-back {
+    display: block; width: 100%; margin-top: 22px; padding: 10px 12px;
+    background: #c4c4c4; color: #111; border-color: #a8a8a8;
+    font-size: clamp(20px, 5vw, 28px); letter-spacing: 0.04em;
+  }
+  .note { color: #777; font-size: 13px; text-align: center; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Student Recipes</h1>
+  <div class="sub">Cheap, easy meals — tap items to tick them off your shopping list</div>
+
+  <div class="nav">
+    <button id="btn-prev" onclick="go(-1)" aria-label="Previous recipe">◀ PREV</button>
+    <div class="count" id="count"></div>
+    <button id="btn-next" onclick="go(1)" aria-label="Next recipe">NEXT ▶</button>
+  </div>
+
+  <div class="card" id="card" aria-live="polite"></div>
+
+  <button id="btn-back" onclick="location.href='./'">BACK TO MUSIC</button>
+  <div class="note">Prices are rough supermarket guides and will vary.</div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RECIPES — edit this list to change them.
+   buy:  things to buy, with a rough price.
+   have: cupboard basics most people already have.
+   ───────────────────────────────────────────────────────────── */
+const RECIPES = [
+  {
+    name: 'Spaghetti Bolognese', serves: 4, time: '35 mins', cost: '£4',
+    buy: [['500g beef mince', '£2.50'], ['Tin of chopped tomatoes', '45p'], ['Onion', '15p'], ['500g spaghetti', '35p']],
+    have: 'Oil, garlic (or garlic granules), salt & pepper, dried mixed herbs',
+    steps: [
+      'Chop the onion and fry it in a little oil in a big pan for 5 minutes until soft.',
+      'Add the mince and fry, breaking it up, until it is brown all over.',
+      'Stir in the chopped tomatoes, a pinch of herbs, salt and pepper. Simmer for 20 minutes.',
+      'Meanwhile boil the spaghetti in salted water for about 10 minutes, then drain.',
+      'Serve the sauce on the spaghetti.'
+    ],
+    tip: 'Freezes well — put the extra portions in tubs for later in the week.'
+  },
+  {
+    name: 'Egg Fried Rice', serves: 2, time: '15 mins', cost: '£1.80',
+    buy: [['250g rice (or a pouch of cooked rice)', '40p'], ['3 eggs', '60p'], ['Frozen peas', '40p'], ['Bunch of spring onions', '40p']],
+    have: 'Oil, soy sauce',
+    steps: [
+      'Cook the rice and let it cool (day-old rice from the fridge is best).',
+      'Heat oil in a frying pan or wok. Add the peas and chopped spring onions for 2 minutes.',
+      'Push everything to one side, crack in the eggs and scramble them.',
+      'Add the rice and fry on a high heat for 3–4 minutes, stirring.',
+      'Splash in soy sauce to taste and serve.'
+    ],
+    tip: 'Throw in any leftover cooked chicken or ham to make it go further.'
+  },
+  {
+    name: 'Chickpea & Spinach Curry', serves: 3, time: '25 mins', cost: '£3',
+    buy: [['Tin of chickpeas', '55p'], ['Tin of chopped tomatoes', '45p'], ['Onion', '15p'], ['Jar of curry paste', '£1.20'], ['Bag of spinach', '75p']],
+    have: 'Oil, rice to serve',
+    steps: [
+      'Chop the onion and fry in oil for 5 minutes.',
+      'Stir in 2 big spoonfuls of curry paste and cook for 1 minute.',
+      'Add the drained chickpeas and chopped tomatoes. Simmer for 15 minutes.',
+      'Stir in the spinach until it wilts.',
+      'Serve with rice.'
+    ],
+    tip: 'Vegan as it is — add a spoon of yoghurt on top if you like it creamier.'
+  },
+  {
+    name: 'Tuna Pasta Bake', serves: 3, time: '30 mins', cost: '£3.50',
+    buy: [['500g pasta', '35p'], ['2 tins of tuna', '£1.60'], ['Tin of sweetcorn', '45p'], ['Tin of chopped tomatoes', '45p'], ['Cheddar cheese', '£1']],
+    have: 'Salt & pepper',
+    steps: [
+      'Heat the oven to 200°C (180°C fan).',
+      'Boil the pasta for 8 minutes, then drain.',
+      'Mix the pasta with the drained tuna, sweetcorn and chopped tomatoes in an oven dish.',
+      'Grate the cheese over the top.',
+      'Bake for 15 minutes until the cheese is golden.'
+    ],
+    tip: 'Use whatever pasta shapes are cheapest.'
+  },
+  {
+    name: 'Jacket Potato with Beans & Cheese', serves: 1, time: '10 mins (microwave)', cost: '£1.20',
+    buy: [['Large baking potato', '30p'], ['Tin of baked beans', '35p'], ['Cheddar cheese', '£1 a block (lasts ages)']],
+    have: 'Butter, salt & pepper',
+    steps: [
+      'Wash the potato and prick it all over with a fork.',
+      'Microwave on high for 8–10 minutes, turning halfway, until soft.',
+      '(Or bake in the oven at 200°C for about an hour for crispy skin.)',
+      'Heat the beans in a pan or the microwave.',
+      'Split the potato, add butter, pour over the beans and grate cheese on top.'
+    ],
+    tip: 'Microwave for speed, then 10 minutes in a hot oven for a crispy skin.'
+  },
+  {
+    name: 'Chilli con Carne', serves: 4, time: '40 mins', cost: '£4.50',
+    buy: [['500g beef mince', '£2.50'], ['Tin of kidney beans', '45p'], ['Tin of chopped tomatoes', '45p'], ['Onion', '15p'], ['Chilli powder', '85p']],
+    have: 'Oil, rice to serve, stock cube (optional)',
+    steps: [
+      'Chop the onion and fry in oil for 5 minutes.',
+      'Add the mince and fry until brown.',
+      'Stir in 1–2 teaspoons of chilli powder (more if you like it hot).',
+      'Add the tomatoes and drained kidney beans. Simmer for 25 minutes.',
+      'Serve with rice, or on a jacket potato.'
+    ],
+    tip: 'Swap the mince for a second tin of beans to make it veggie and even cheaper.'
+  },
+  {
+    name: 'Cheese & Veg Omelette', serves: 1, time: '10 mins', cost: '£1.50',
+    buy: [['3 eggs', '60p'], ['Pepper', '50p'], ['Cheddar cheese', '£1 a block (lasts ages)']],
+    have: 'Oil or butter, salt & pepper',
+    steps: [
+      'Beat the eggs in a bowl with salt and pepper.',
+      'Chop the pepper small and fry in a little oil for 3 minutes.',
+      'Pour in the eggs and let them set for a minute, gently moving the edges.',
+      'Sprinkle grated cheese over one half.',
+      'Fold in half and slide onto a plate.'
+    ],
+    tip: 'Any leftover veg, ham or mushrooms work too.'
+  },
+  {
+    name: 'Red Lentil Soup', serves: 4, time: '30 mins', cost: '£1.60',
+    buy: [['250g red lentils', '70p'], ['2 carrots', '20p'], ['Onion', '15p'], ['Vegetable stock cubes', '50p']],
+    have: 'Oil, salt & pepper, bread to dip',
+    steps: [
+      'Chop the onion and carrots and fry in oil for 5 minutes.',
+      'Add the lentils and 1 litre of water with 2 stock cubes.',
+      'Simmer for 20 minutes until the lentils are soft.',
+      'Mash or blend until smooth (or leave it chunky).',
+      'Season and serve with bread.'
+    ],
+    tip: 'Add a teaspoon of curry powder for a spicy version.'
+  },
+  {
+    name: 'Sausage & Veg Tray Bake', serves: 2, time: '45 mins', cost: '£3.50',
+    buy: [['Pack of 8 sausages', '£1.50'], ['Potatoes (1kg bag)', '80p'], ['Red onion', '20p'], ['Pepper', '50p']],
+    have: 'Oil, salt & pepper, dried herbs',
+    steps: [
+      'Heat the oven to 200°C (180°C fan).',
+      'Cut the potatoes into chunks, and the onion and pepper into wedges.',
+      'Put everything on a baking tray with the sausages, drizzle with oil and season.',
+      'Bake for 40 minutes, turning once, until golden.',
+      'Serve straight from the tray — only one thing to wash up.'
+    ],
+    tip: 'Veggie sausages work just as well.'
+  },
+  {
+    name: 'Chicken Noodle Stir Fry', serves: 2, time: '20 mins', cost: '£4',
+    buy: [['Chicken thighs (boneless)', '£2.20'], ['Bag of frozen stir-fry veg', '£1'], ['Pack of egg noodles', '75p']],
+    have: 'Oil, soy sauce, garlic (optional)',
+    steps: [
+      'Cut the chicken into thin strips.',
+      'Cook the noodles in boiling water for 4 minutes, then drain.',
+      'Fry the chicken in hot oil for 6–7 minutes until cooked through.',
+      'Add the frozen veg and stir fry for 4 minutes.',
+      'Add the noodles and a good splash of soy sauce, toss together and serve.'
+    ],
+    tip: 'Thighs are cheaper and juicier than breast.'
+  }
+];
+
+let current = 0;
+try { current = Math.min(RECIPES.length - 1, Math.max(0, parseInt(localStorage.getItem('recipe')) || 0)); } catch (e) {}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+function show() {
+  const r = RECIPES[current];
+  document.getElementById('count').textContent = (current + 1) + ' of ' + RECIPES.length;
+  document.getElementById('card').innerHTML =
+    '<h2>' + esc(r.name) + '</h2>' +
+    '<div class="facts"><span class="cost">About ' + esc(r.cost) + '</span>' +
+      '<span>Serves ' + r.serves + '</span><span>' + esc(r.time) + '</span></div>' +
+    '<h3>Shopping list</h3>' +
+    '<ul class="shop">' + r.buy.map(b =>
+      '<li onclick="this.classList.toggle(\'got\')"><span>' + esc(b[0]) + '</span><span class="price">' + esc(b[1]) + '</span></li>').join('') + '</ul>' +
+    '<div class="have">You probably have: ' + esc(r.have) + '</div>' +
+    '<h3>How to make it</h3>' +
+    '<ol class="steps">' + r.steps.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol>' +
+    '<div class="tip"><b>Tip:</b> ' + esc(r.tip) + '</div>';
+  try { localStorage.setItem('recipe', current); } catch (e) {}
+}
+
+function go(d) {
+  current = (current + d + RECIPES.length) % RECIPES.length;
+  show();
+  window.scrollTo(0, 0);
+}
+
+// Swipe left / right to flick between recipes
+let sx = null, sy = null;
+document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+document.addEventListener('touchend', e => {
+  if (sx === null) return;
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1);
+  sx = sy = null;
+}, { passive: true });
+document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); });
+
+show();
+</script>
+</body>
+</html>

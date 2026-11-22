@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="version" content="1.0">
+<meta name="version" content="1.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -77,6 +77,14 @@
     font-size: clamp(14px, 3.6vw, 20px);
   }
   .now .art-msg[hidden] { display: none; }
+  .now .art-msg.flash {
+    color: #fff; font-weight: 900; font-size: clamp(16px, 4.2vw, 24px);
+    animation: art-flash 1s ease-in-out infinite;
+  }
+  @keyframes art-flash {
+    0%, 100% { opacity: 1; background: #1565c0; }
+    50%      { opacity: 0.35; background: #222; }
+  }
   .now-text { text-align: left; min-width: 0; flex: 1 1 0; }
   /* Always two lines tall, whether the name is short or long */
   .now .track {
@@ -190,6 +198,11 @@
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.08em;
     padding: 8px 12px;
   }
+  #btn-recipes {
+    display: block; width: 100%; margin-top: 18px; padding: 8px 12px;
+    background: #546e7a; color: #fff; border-color: #90a4ae;
+    font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.06em;
+  }
   #btn-email { background: #1565c0; border-color: #64b5f6; margin-top: 18px; }
   /* RATE THIS APP: thin, black, bold white text */
   #btn-rate {
@@ -284,6 +297,8 @@
       <button class="btn-radio" id="btn-house" onclick="toggleRadio('house')">HOUSE</button>
       <button class="btn-radio" id="btn-garage" onclick="toggleRadio('garage')">UK GARAGE</button>
     </div>
+
+    <button id="btn-recipes" onclick="location.href='recipes.html'">STUDENT RECIPES</button>
 
     <button id="btn-email" onclick="openEmail()">EMAIL</button>
 
@@ -681,13 +696,27 @@ function loadTrack(i, autoplay) {
 const coverEl = document.getElementById('cover');
 let artToken = 0;
 
+// No picture (none for this song, it failed, or it still hasn't loaded
+// after a minute): a flashing "looking for artwork" fills the box instead.
+let artTimer = null;
+function artMissing() {
+  const artMsg = document.getElementById('art-msg');
+  coverEl.hidden = true;
+  artMsg.textContent = 'looking for artwork';
+  artMsg.classList.add('flash');
+  artMsg.hidden = false;
+}
 function setArt(src) {
   const artMsg = document.getElementById('art-msg');
-  if (!src) { coverEl.hidden = true; artMsg.hidden = true; coverEl.removeAttribute('src'); updateMediaSession(null); return; }
+  clearTimeout(artTimer);
+  artMsg.classList.remove('flash');
+  artMsg.textContent = 'search for album art';
+  if (!src) { coverEl.removeAttribute('src'); artMissing(); updateMediaSession(null); return; }
   // Shown while the picture loads
   coverEl.hidden = true; artMsg.hidden = false;
-  coverEl.onerror = () => { coverEl.hidden = true; artMsg.hidden = true; };
-  coverEl.onload = () => { coverEl.hidden = false; artMsg.hidden = true; };
+  artTimer = setTimeout(artMissing, 60000);
+  coverEl.onerror = () => { clearTimeout(artTimer); artMissing(); };
+  coverEl.onload = () => { clearTimeout(artTimer); artMsg.classList.remove('flash'); coverEl.hidden = false; artMsg.hidden = true; };
   coverEl.src = src;
   updateMediaSession(src);
 }
