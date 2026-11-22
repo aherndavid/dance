@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="version" content="1.16">
+<meta name="version" content="1.17">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -210,6 +210,28 @@
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.08em;
     padding: 8px 12px;
   }
+  /* ── Collapsible menu ── */
+  .menu-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .menu-btn {
+    background: #000; color: #ff8c00; border-color: #ff8c00;
+    font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.06em;
+    padding: 8px 12px; min-width: 0;
+  }
+  .menu-btn::after { content: " \25BE"; }                 /* ▾ closed */
+  .menu-btn[aria-expanded="true"] { background: #ff8c00; color: #111; }
+  .menu-btn[aria-expanded="true"]::after { content: " \25B4"; }  /* ▴ open */
+  .wide-menu { display: block; width: 100%; margin-top: 8px; }
+  .panel { margin-top: 8px; padding: 10px; border: 2px solid #333; border-radius: 18px; background: #1a1a1a; }
+  .panel[hidden] { display: none; }
+  .panel .radio-row, .panel .pair-row { margin-top: 0; }
+  .howto { text-align: left; font-size: clamp(17px, 4.4vw, 24px); line-height: 1.35; }
+  .howto h2 { font-size: clamp(20px, 5vw, 28px); color: #ff8c00; margin: 4px 0 6px; }
+  .howto p { margin-bottom: 10px; color: #ddd; }
+  .howto .t-up { color: #66bb6a; font-weight: bold; }
+  .howto .t-down { color: #ef5350; font-weight: bold; }
+  #btn-feedback { background: #1565c0; border-color: #64b5f6; margin: 4px 0 10px; }
+  .howto .howto-version { text-align: right; color: #888; font-size: 15px; margin: 0; }
+  #version { display: none; }   /* the version now lives in HOW TO USE */
   .recipes-layer { position: fixed; inset: 0; z-index: 95; background: #111; }
   .recipes-layer[hidden] { display: none; }
   .recipes-layer iframe { width: 100%; height: 100%; border: 0; display: block; }
@@ -329,28 +351,50 @@
       </button>
     </div>
 
-    <div class="radio-row">
-      <button class="btn-radio" id="btn-capdance" onclick="toggleRadio('capdance')">CAPITAL DANCE</button>
-      <button class="btn-radio" id="btn-heartdance" onclick="toggleRadio('heartdance')">HEART DANCE</button>
-      <button class="btn-radio" id="btn-house" onclick="toggleRadio('house')">HOUSE</button>
-      <button class="btn-radio" id="btn-garage" onclick="toggleRadio('garage')">UK GARAGE</button>
+    <!-- Menu: RADIO and APPS side by side, then HOW TO USE. Each opens
+         a panel underneath; opening one closes the others. -->
+    <div class="menu-row">
+      <button class="menu-btn" id="btn-menu-radio" onclick="togglePanel('radio')" aria-expanded="false" aria-controls="panel-radio">RADIO</button>
+      <button class="menu-btn" id="btn-menu-apps" onclick="togglePanel('apps')" aria-expanded="false" aria-controls="panel-apps">APPS</button>
     </div>
 
-    <button id="btn-recipes" onclick="openRecipes()">STUDENT RECIPES</button>
+    <div class="panel" id="panel-radio" hidden>
+      <div class="radio-row">
+        <button class="btn-radio" id="btn-capdance" onclick="toggleRadio('capdance')">CAPITAL DANCE</button>
+        <button class="btn-radio" id="btn-heartdance" onclick="toggleRadio('heartdance')">HEART DANCE</button>
+        <button class="btn-radio" id="btn-house" onclick="toggleRadio('house')">HOUSE</button>
+        <button class="btn-radio" id="btn-garage" onclick="toggleRadio('garage')">UK GARAGE</button>
+      </div>
+    </div>
 
-    <div class="pair-row">
-      <button id="btn-camera" onclick="openCamera()">CAMERA</button>
-      <button id="btn-email" onclick="openEmail()">EMAIL</button>
+    <div class="panel" id="panel-apps" hidden>
+      <div class="pair-row">
+        <button id="btn-camera" onclick="openCamera()">CAMERA</button>
+        <button id="btn-email" onclick="openEmail()">EMAIL</button>
+      </div>
+      <button id="btn-recipes" onclick="openRecipes()">STUDENT RECIPES</button>
+      <button id="btn-rate" class="wide-btn" onclick="toggleStars()">RATE APP</button>
+      <div class="stars" id="stars" hidden>
+        <button onclick="rateApp(1)" aria-label="1 star">★</button>
+        <button onclick="rateApp(2)" aria-label="2 stars">★</button>
+        <button onclick="rateApp(3)" aria-label="3 stars">★</button>
+        <button onclick="rateApp(4)" aria-label="4 stars">★</button>
+        <button onclick="rateApp(5)" aria-label="5 stars">★</button>
+      </div>
     </div>
     <input type="file" id="camera-input" accept="image/*" capture="environment" hidden onchange="gotPhoto(this)">
 
-    <button id="btn-rate" class="wide-btn" onclick="toggleStars()">RATE APP</button>
-    <div class="stars" id="stars" hidden>
-      <button onclick="rateApp(1)" aria-label="1 star">★</button>
-      <button onclick="rateApp(2)" aria-label="2 stars">★</button>
-      <button onclick="rateApp(3)" aria-label="3 stars">★</button>
-      <button onclick="rateApp(4)" aria-label="4 stars">★</button>
-      <button onclick="rateApp(5)" aria-label="5 stars">★</button>
+    <button class="menu-btn wide-menu" id="btn-menu-howto" onclick="togglePanel('howto')" aria-expanded="false" aria-controls="panel-howto">HOW TO USE</button>
+    <div class="panel howto" id="panel-howto" hidden>
+      <h2>Thumbs</h2>
+      <p><span class="t-up">Thumbs up</span> — you like this song. Liked songs play first each time you open the music. Tap it again to undo.</p>
+      <p><span class="t-down">Thumbs down</span> — you don't like this song. It skips straight away and won't play again.</p>
+      <p>Your thumbs are remembered on this phone only.</p>
+      <h2>Buttons</h2>
+      <p><b>RADIO</b> — live dance stations. Tap a station to listen; tap <b>BACK TO MUSIC</b> to return to your songs.</p>
+      <p><b>APPS</b> — camera, email, student recipes and rate the app.</p>
+      <button id="btn-feedback" class="wide-btn" onclick="sendFeedback()">SEND FEEDBACK</button>
+      <p class="howto-version" id="howto-version"></p>
     </div>
 
     <!-- CLOSE: on its own, further down, full width -->
@@ -983,6 +1027,30 @@ function rateApp(n) {
     '?subject=' + encodeURIComponent('Dance app rating: ' + n + ' out of 5') +
     '&body=' + encodeURIComponent('I rate the Dance app ' + stars + ' (' + n + '/5).\n\n');
 }
+
+// ── Collapsible menu: RADIO, APPS, HOW TO USE ──
+// Tapping one opens its panel underneath and closes any other.
+function togglePanel(name) {
+  ['radio', 'apps', 'howto'].forEach(n => {
+    const open = n === name && document.getElementById('panel-' + n).hidden;
+    document.getElementById('panel-' + n).hidden = !open;
+    document.getElementById('btn-menu-' + n).setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  if (name !== 'apps') document.getElementById('stars').hidden = true;
+  const btn = document.getElementById('btn-menu-' + name);
+  if (btn.getAttribute('aria-expanded') === 'true') {
+    document.getElementById('panel-' + name).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// SEND FEEDBACK (in HOW TO USE): a new email with the version filled in
+function sendFeedback() {
+  const v = document.querySelector('meta[name="version"]')?.content || '';
+  location.href = 'mailto:' + HELP_EMAIL +
+    '?subject=' + encodeURIComponent('Dance app feedback (v' + v + ')');
+}
+document.getElementById('howto-version').textContent =
+  'Version ' + (document.querySelector('meta[name="version"]')?.content || '');
 
 // STUDENT RECIPES: shown over the player (not a new page) so the
 // music carries on. The recipes page's BACK TO MUSIC closes it.
