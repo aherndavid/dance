@@ -88,7 +88,7 @@
 
   <div class="card" id="card" aria-live="polite"></div>
 
-  <button id="btn-back" onclick="location.href='./'">BACK TO MUSIC</button>
+  <button id="btn-back" onclick="backToMusic()">BACK TO MUSIC</button>
   <div class="note">Prices are rough supermarket guides and will vary.</div>
 </div>
 
@@ -230,6 +230,13 @@ const RECIPES = [
     tip: 'Thighs are cheaper and juicier than breast.'
   }
 ];
+
+// Opened over the player: tell it to close us (music keeps playing).
+// Opened on its own: just go to the player.
+function backToMusic() {
+  if (window.parent !== window) window.parent.postMessage('close-recipes', location.origin);
+  else location.href = './';
+}
 
 let current = 0;
 try { current = Math.min(RECIPES.length - 1, Math.max(0, parseInt(localStorage.getItem('recipe')) || 0)); } catch (e) {}

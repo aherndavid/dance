@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="version" content="1.2">
+<meta name="version" content="1.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -198,6 +198,9 @@
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.08em;
     padding: 8px 12px;
   }
+  .recipes-layer { position: fixed; inset: 0; z-index: 95; background: #111; }
+  .recipes-layer[hidden] { display: none; }
+  .recipes-layer iframe { width: 100%; height: 100%; border: 0; display: block; }
   #btn-recipes {
     display: block; width: 100%; margin-top: 18px; padding: 8px 12px;
     background: #546e7a; color: #fff; border-color: #90a4ae;
@@ -298,7 +301,7 @@
       <button class="btn-radio" id="btn-garage" onclick="toggleRadio('garage')">UK GARAGE</button>
     </div>
 
-    <button id="btn-recipes" onclick="location.href='recipes.html'">STUDENT RECIPES</button>
+    <button id="btn-recipes" onclick="openRecipes()">STUDENT RECIPES</button>
 
     <button id="btn-email" onclick="openEmail()">EMAIL</button>
 
@@ -322,6 +325,10 @@
   </div>
 
   <audio id="audio" preload="auto" playsinline></audio>
+</div>
+<!-- Student recipes open on top of the player, so the music keeps playing -->
+<div class="recipes-layer" id="recipes-layer" hidden>
+  <iframe id="recipes-frame" title="Student recipes"></iframe>
 </div>
 
 <script>
@@ -859,6 +866,21 @@ function rateApp(n) {
     '?subject=' + encodeURIComponent('Dance app rating: ' + n + ' out of 5') +
     '&body=' + encodeURIComponent('I rate the Dance app ' + stars + ' (' + n + '/5).\n\n');
 }
+
+// STUDENT RECIPES: shown over the player (not a new page) so the
+// music carries on. The recipes page's BACK TO MUSIC closes it.
+function openRecipes() {
+  const frame = document.getElementById('recipes-frame');
+  if (!frame.src) frame.src = 'recipes.html';
+  document.getElementById('recipes-layer').hidden = false;
+}
+function closeRecipes() {
+  document.getElementById('recipes-layer').hidden = true;
+  window.scrollTo(0, 0);
+}
+window.addEventListener('message', e => {
+  if (e.origin === location.origin && e.data === 'close-recipes') closeRecipes();
+});
 
 // EMAIL button: opens the phone's own email app with a new message
 function openEmail() {
