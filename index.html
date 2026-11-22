@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="version" content="1.17">
+<meta name="version" content="1.19">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -113,7 +113,7 @@
   .icon-btn svg { fill: currentColor; display: block; }
 
   .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 8px; margin-bottom: 18px; }
-  .controls button { height: min(clamp(110px, 28vw, 150px), 18vh); }
+  .controls button { height: min(clamp(150px, 37vw, 200px), 24vh); }
   .controls svg { width: 58%; max-width: 90px; height: auto; }
   #btn-prev, #btn-next { background: #000; color: #ff8c00; border-color: #ff8c00; }
   #btn-play { background: #1e88e5; color: #fff; border-color: #64b5f6; }
@@ -221,9 +221,19 @@
   .menu-btn[aria-expanded="true"] { background: #ff8c00; color: #111; }
   .menu-btn[aria-expanded="true"]::after { content: " \25B4"; }  /* ▴ open */
   .wide-menu { display: block; width: 100%; margin-top: 8px; }
+  .menu-row .menu-btn { height: clamp(84px, 22.8vw, 110px); }   /* RADIO / MORE: double height */
+  /* MORE open: hide the music controls and RADIO; MORE becomes BACK TO MUSIC */
+  #player.more-open .controls, #player.more-open .rate,
+  #player.more-open #btn-menu-radio, #player.more-open #panel-radio { display: none; }
+  #player.more-open .menu-row { grid-template-columns: 1fr; }
+  #player.more-open #btn-menu-more { height: auto; padding: 12px; }
+  #btn-menu-more[aria-expanded="true"]::after { content: none; }
+  #panel-howto { margin-top: 10px; }
+  #panel-howto[hidden] { display: none; }
   .panel { margin-top: 8px; padding: 10px; border: 2px solid #333; border-radius: 18px; background: #1a1a1a; }
   .panel[hidden] { display: none; }
   .panel .radio-row, .panel .pair-row { margin-top: 0; }
+  #panel-more .wide-menu { margin-top: 8px; }
   .howto { text-align: left; font-size: clamp(17px, 4.4vw, 24px); line-height: 1.35; }
   .howto h2 { font-size: clamp(20px, 5vw, 28px); color: #ff8c00; margin: 4px 0 6px; }
   .howto p { margin-bottom: 10px; color: #ddd; }
@@ -351,11 +361,12 @@
       </button>
     </div>
 
-    <!-- Menu: RADIO and APPS side by side, then HOW TO USE. Each opens
-         a panel underneath; opening one closes the others. -->
+    <!-- Menu: RADIO and MORE side by side. RADIO opens the stations
+         underneath. MORE swaps the player for a page of extras (the
+         controls and RADIO hide); its button becomes BACK TO MUSIC. -->
     <div class="menu-row">
-      <button class="menu-btn" id="btn-menu-radio" onclick="togglePanel('radio')" aria-expanded="false" aria-controls="panel-radio">RADIO</button>
-      <button class="menu-btn" id="btn-menu-apps" onclick="togglePanel('apps')" aria-expanded="false" aria-controls="panel-apps">APPS</button>
+      <button class="menu-btn" id="btn-menu-radio" onclick="toggleRadioPanel()" aria-expanded="false" aria-controls="panel-radio">RADIO</button>
+      <button class="menu-btn" id="btn-menu-more" onclick="toggleMore()" aria-expanded="false" aria-controls="panel-more">MORE</button>
     </div>
 
     <div class="panel" id="panel-radio" hidden>
@@ -367,7 +378,7 @@
       </div>
     </div>
 
-    <div class="panel" id="panel-apps" hidden>
+    <div class="panel" id="panel-more" hidden>
       <div class="pair-row">
         <button id="btn-camera" onclick="openCamera()">CAMERA</button>
         <button id="btn-email" onclick="openEmail()">EMAIL</button>
@@ -381,21 +392,21 @@
         <button onclick="rateApp(4)" aria-label="4 stars">★</button>
         <button onclick="rateApp(5)" aria-label="5 stars">★</button>
       </div>
+
+      <button class="menu-btn wide-menu" id="btn-menu-howto" onclick="toggleHowto()" aria-expanded="false" aria-controls="panel-howto">HOW TO USE</button>
+      <div class="howto" id="panel-howto" hidden>
+        <h2>Thumbs</h2>
+        <p><span class="t-up">Thumbs up</span> — you like this song. Liked songs play first each time you open the music. Tap it again to undo.</p>
+        <p><span class="t-down">Thumbs down</span> — you don't like this song. It skips straight away and won't play again.</p>
+        <p>Your thumbs are remembered on this phone only.</p>
+        <h2>Buttons</h2>
+        <p><b>RADIO</b> — live dance stations. Tap a station to listen; tap <b>BACK TO MUSIC</b> to return to your songs.</p>
+        <p><b>MORE</b> — camera, email, student recipes, rate the app and this help. Tap <b>BACK TO MUSIC</b> to get the music buttons back.</p>
+        <button id="btn-feedback" class="wide-btn" onclick="sendFeedback()">SEND FEEDBACK</button>
+        <p class="howto-version" id="howto-version"></p>
+      </div>
     </div>
     <input type="file" id="camera-input" accept="image/*" capture="environment" hidden onchange="gotPhoto(this)">
-
-    <button class="menu-btn wide-menu" id="btn-menu-howto" onclick="togglePanel('howto')" aria-expanded="false" aria-controls="panel-howto">HOW TO USE</button>
-    <div class="panel howto" id="panel-howto" hidden>
-      <h2>Thumbs</h2>
-      <p><span class="t-up">Thumbs up</span> — you like this song. Liked songs play first each time you open the music. Tap it again to undo.</p>
-      <p><span class="t-down">Thumbs down</span> — you don't like this song. It skips straight away and won't play again.</p>
-      <p>Your thumbs are remembered on this phone only.</p>
-      <h2>Buttons</h2>
-      <p><b>RADIO</b> — live dance stations. Tap a station to listen; tap <b>BACK TO MUSIC</b> to return to your songs.</p>
-      <p><b>APPS</b> — camera, email, student recipes and rate the app.</p>
-      <button id="btn-feedback" class="wide-btn" onclick="sendFeedback()">SEND FEEDBACK</button>
-      <p class="howto-version" id="howto-version"></p>
-    </div>
 
     <!-- CLOSE: on its own, further down, full width -->
     <button id="btn-close" class="wide-btn" onclick="location.href='https://www.google.com'">CLOSE</button>
@@ -1028,19 +1039,28 @@ function rateApp(n) {
     '&body=' + encodeURIComponent('I rate the Dance app ' + stars + ' (' + n + '/5).\n\n');
 }
 
-// ── Collapsible menu: RADIO, APPS, HOW TO USE ──
-// Tapping one opens its panel underneath and closes any other.
-function togglePanel(name) {
-  ['radio', 'apps', 'howto'].forEach(n => {
-    const open = n === name && document.getElementById('panel-' + n).hidden;
-    document.getElementById('panel-' + n).hidden = !open;
-    document.getElementById('btn-menu-' + n).setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  if (name !== 'apps') document.getElementById('stars').hidden = true;
-  const btn = document.getElementById('btn-menu-' + name);
-  if (btn.getAttribute('aria-expanded') === 'true') {
-    document.getElementById('panel-' + name).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+// ── Menu: RADIO opens the stations underneath; MORE swaps the
+// player buttons for the extras page, and back again ──
+function setOpen(btnId, panelId, open) {
+  document.getElementById(panelId).hidden = !open;
+  document.getElementById(btnId).setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function toggleRadioPanel() {
+  setOpen('btn-menu-radio', 'panel-radio', document.getElementById('panel-radio').hidden);
+}
+function toggleMore() {
+  const open = document.getElementById('panel-more').hidden;
+  setOpen('btn-menu-more', 'panel-more', open);
+  document.getElementById('player').classList.toggle('more-open', open);
+  document.getElementById('btn-menu-more').textContent = open ? 'BACK TO MUSIC' : 'MORE';
+  if (open) setOpen('btn-menu-radio', 'panel-radio', false);
+  else { document.getElementById('stars').hidden = true; setOpen('btn-menu-howto', 'panel-howto', false); }
+  window.scrollTo(0, 0);
+}
+function toggleHowto() {
+  const open = document.getElementById('panel-howto').hidden;
+  setOpen('btn-menu-howto', 'panel-howto', open);
+  if (open) document.getElementById('panel-howto').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // SEND FEEDBACK (in HOW TO USE): a new email with the version filled in
