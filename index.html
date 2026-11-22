@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="version" content="1.4">
+<meta name="version" content="1.5">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -201,6 +201,20 @@
   .recipes-layer { position: fixed; inset: 0; z-index: 95; background: #111; }
   .recipes-layer[hidden] { display: none; }
   .recipes-layer iframe { width: 100%; height: 100%; border: 0; display: block; }
+  #btn-camera {
+    display: block; width: 100%; margin-top: 18px; padding: 8px 12px;
+    background: #263238; color: #fff; border-color: #64b5f6;
+    font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.06em;
+  }
+  .photo-layer {
+    position: fixed; inset: 0; z-index: 96; background: #000;
+    display: flex; flex-direction: column; gap: 14px;
+    padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .photo-layer[hidden] { display: none; }
+  .photo-layer img { flex: 1 1 auto; min-height: 0; width: 100%; object-fit: contain; }
+  #btn-photo-save { background: #1565c0; color: #fff; border-color: #64b5f6; padding: 12px; }
+  #btn-photo-close { background: #c4c4c4; color: #111; border-color: #a8a8a8; padding: 12px; }
   #btn-recipes {
     display: block; width: 100%; margin-top: 18px; padding: 8px 12px;
     background: #546e7a; color: #fff; border-color: #90a4ae;
@@ -303,6 +317,9 @@
 
     <button id="btn-recipes" onclick="openRecipes()">STUDENT RECIPES</button>
 
+    <button id="btn-camera" onclick="openCamera()">CAMERA</button>
+    <input type="file" id="camera-input" accept="image/*" capture="environment" hidden onchange="gotPhoto(this)">
+
     <button id="btn-email" onclick="openEmail()">EMAIL</button>
 
     <button id="btn-rate" onclick="toggleStars()">RATE THIS APP</button>
@@ -327,6 +344,11 @@
   <audio id="audio" preload="auto" playsinline></audio>
 </div>
 <!-- Student recipes open on top of the player, so the music keeps playing -->
+<div class="photo-layer" id="photo-layer" hidden>
+  <img id="photo" alt="Your photo">
+  <button id="btn-photo-save" onclick="savePhoto()">SAVE PHOTO</button>
+  <button id="btn-photo-close" onclick="closePhoto()">BACK TO MUSIC</button>
+</div>
 <div class="recipes-layer" id="recipes-layer" hidden>
   <iframe id="recipes-frame" title="Student recipes"></iframe>
 </div>
@@ -881,6 +903,34 @@ function closeRecipes() {
 window.addEventListener('message', e => {
   if (e.origin === location.origin && e.data === 'close-recipes') closeRecipes();
 });
+
+// CAMERA: opens the phone's own camera. The photo is then shown with
+// SAVE PHOTO (the phone's share sheet, where "Save Image" puts it in
+// Photos) — browsers can't save to the camera roll by themselves.
+let photoFile = null, photoUrl = null;
+function openCamera() { document.getElementById('camera-input').click(); }
+function gotPhoto(input) {
+  const f = input.files && input.files[0];
+  input.value = '';
+  if (!f) return;
+  photoFile = f;
+  if (photoUrl) URL.revokeObjectURL(photoUrl);
+  photoUrl = URL.createObjectURL(f);
+  document.getElementById('photo').src = photoUrl;
+  document.getElementById('photo-layer').hidden = false;
+}
+async function savePhoto() {
+  if (!photoFile) return;
+  const file = new File([photoFile], 'photo-' + Date.now() + '.jpg', { type: photoFile.type || 'image/jpeg' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); } catch (e) {}   // cancelled: nothing to do
+    return;
+  }
+  const a = document.createElement('a');   // no share sheet: download it instead
+  a.href = photoUrl; a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function closePhoto() { document.getElementById('photo-layer').hidden = true; }
 
 // EMAIL button: opens the phone's own email app with a new message
 function openEmail() {
