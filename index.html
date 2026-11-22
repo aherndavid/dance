@@ -81,6 +81,15 @@
     color: #fff; font-weight: 900; font-size: clamp(16px, 4.2vw, 24px);
     animation: art-flash 1s ease-in-out infinite;
   }
+  /* No artwork: a plain "white label" record fills the box */
+  .now .art-msg.white-label {
+    padding: 0; font-size: 0;
+    background:
+      radial-gradient(circle, #111 0 3%, #fff 3.5% 22%, #111 22.5% 23.5%,
+        transparent 24%),
+      repeating-radial-gradient(circle, #0b0b0b 0 1.5px, #1c1c1c 1.5px 3px);
+    border-radius: 50%;
+  }
   @keyframes art-flash {
     0%, 100% { opacity: 1; background: #1565c0; }
     50%      { opacity: 0.35; background: #222; }
@@ -229,7 +238,7 @@
   #btn-photo-close { background: #c4c4c4; color: #111; border-color: #a8a8a8; padding: 12px; }
   #btn-recipes {
     display: block; width: 100%; margin-top: 8px; padding: 8px 12px;
-    background: #546e7a; color: #fff; border-color: #90a4ae;
+    background: #ef6c00; color: #fff; border-color: #ffa726;
     font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 0.06em;
   }
   #btn-email { background: #1565c0; border-color: #64b5f6; margin-top: 8px; }
@@ -734,19 +743,19 @@ const coverEl = document.getElementById('cover');
 let artToken = 0;
 
 // No picture (none for this song, it failed, or it still hasn't loaded
-// after a minute): a flashing "looking for artwork" fills the box instead.
+// after a minute): a plain white-label record fills the box instead.
 let artTimer = null;
 function artMissing() {
   const artMsg = document.getElementById('art-msg');
   coverEl.hidden = true;
-  artMsg.textContent = 'looking for artwork';
-  artMsg.classList.add('flash');
+  artMsg.textContent = 'no artwork';   // read out by screen readers only
+  artMsg.classList.add('white-label');
   artMsg.hidden = false;
 }
 function setArt(src) {
   const artMsg = document.getElementById('art-msg');
   clearTimeout(artTimer);
-  artMsg.classList.remove('flash');
+  artMsg.classList.remove('flash', 'white-label');
   artMsg.textContent = 'search for album art';
   if (!src) { coverEl.removeAttribute('src'); artMissing(); updateMediaSession(null); return; }
   // Shown while the picture loads
